@@ -5,35 +5,93 @@ from sklearn import datasets
 from sklearn.neighbors import KNeighborsClassifier
 
 class KNNClassifier:
-	"""K-Nearest Neighbors Classifier"""
+	"""
+	K-Nearest Neighbors Classifier
+	Classifier implementing the k-nearest neighbors vote.
+	
+	Parameters
+	---------
+	n_neighbors : int, optional (default = 3)
+		Number of neighbors to use by default.
+
+	"""
 
 	def __init__(self, n_neighbors=3):
 		self.n_neighbors_ = n_neighbors
 	
 	def fit(self, X, y):
+		"""
+		Store in the class the training dataset.
+
+		Parameters
+		---------
+		X : shape (n_samples, n_features)
+			Training vectors, where n_samples is the number of training samples
+			and  n_features is the number of features.
+		y : shape (n_samples, )
+			Target values factorized. Each class must have a 0-index value.
+
+		Returns
+		---------
+		self : object
+		"""
+
 		self.X_ = X
 		self.y_ = y
 
+		return self
+
 	def predict(self, X):
+		"""
+		Perform classification on an array of test vectors X.
+
+		Parameters
+		---------
+		X : shape (n_samples, n_features)
+			Array of test vectors.
+	
+		Returns
+		---------
+		C : shape (n_samples, )
+			Predicted target values for array X. Class label for
+			each data sample.
+
+		"""
 
 		assert(X.shape[1] == self.X_.shape[1])
 
-		preds = np.zeros((X.shape[0], ))
+		C = np.zeros((X.shape[0], ), dtype=np.uint)
 
 		for i, x_k in enumerate(X):
 			dist = np.sum(np.square(self.X_ - x_k), axis=1)
 			idx = np.argsort(dist)[0:self.n_neighbors_]
-			preds[i] = self.most_common_(self.y_[idx])
+			C[i] = self.majority_vote_(self.y_[idx])
 
-		return preds
+		return C
 
-	def most_common_(self, list_vals):
-		a = list_vals.tolist()
-		return max(map(lambda val: (a.count(val), val), set(a)))[1]
+	def majority_vote_(self, list_vals):
+		"""
+		Perform majority vote on the input array.
+
+		Parameters
+		---------
+		list_vals : Array of int.
+	
+		Returns
+		---------
+		a: int
+			The element that appears most frequently on the array
+
+		"""
+
+		as_ = list_vals.tolist()
+		a = max(map(lambda val: (as_.count(val), val), set(as_)))[1]
+
+		return a
 
 def main(argv):
 	np.random.seed(0)
-		
+
 	knn = KNNClassifier(n_neighbors=3)
 
 	iris = datasets.load_iris()

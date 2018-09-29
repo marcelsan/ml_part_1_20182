@@ -49,29 +49,32 @@ class BayesianClassifier:
 
 	def predict(self, X):
 		"""
-		
+		Perform classification on an array of test vectors X.
+
 		Parameters
 		---------
 		X : shape (n_samples, n_features)
-			
+			Array of test vectors.
 	
 		Returns
 		---------
-		predictions : shape (n_samples, )
+		C : shape (n_samples, )
+			Predicted target values for array X. Class label for
+			each data sample.
 
 		"""
 
 		assert(X.shape[1] == self.theta_.shape[1])
 
-		preds = np.zeros((X.shape[0], ))
+		C = np.zeros((X.shape[0], ), dtype=np.uint)
 		P_w = self.class_count_ / np.sum(self.class_count_)
 
 		sigma_inv = 1/self.sigma_
 
 		for i, x_k in enumerate(X):
-			preds[i] = np.argmax(np.exp((-1/2) * np.sum((x_k - self.theta_) * sigma_inv * (x_k - self.theta_), axis=1)) * P_w)
+			C[i] = np.argmax(np.exp((-1/2) * np.sum((x_k - self.theta_) * sigma_inv * (x_k - self.theta_), axis=1)) * P_w)
 
-		return preds
+		return C
 
 
 def main(argv):
