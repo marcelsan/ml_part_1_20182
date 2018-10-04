@@ -41,7 +41,14 @@ class KMeansClustering:
 		return self
 
 	def predict(self, X):
-		pass
+
+		labels = np.zeros((X.shape[0], ), dtype=np.uint)
+
+		for j, x_k in enumerate(X):
+			distances_x = np.sum(np.square(self.cluster_centers_ - x_k), axis=1)
+			labels[j] = np.argmin(distances_x)
+
+		return labels
 
 def main(argv):
 
