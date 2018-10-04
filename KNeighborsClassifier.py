@@ -8,6 +8,8 @@ from sklearn.model_selection import GridSearchCV
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.utils import shuffle
 
+np.random.seed(0)
+
 class KNNClassifier(BaseEstimator, ClassifierMixin):
 	"""
 	K-Nearest Neighbors Classifier
@@ -100,8 +102,6 @@ def print_scores(grid_search):
 	    print(mean_score, params)
 
 def main(argv):
-	np.random.seed(0)
-
 	# Test the classifier
 	knn = KNNClassifier(n_neighbors=3)
 	iris = datasets.load_iris()
