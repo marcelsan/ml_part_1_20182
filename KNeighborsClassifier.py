@@ -114,8 +114,8 @@ def main(argv):
 	iris_X_test  = iris_X[indices[-10:]]
 	iris_y_test  = iris_y[indices[-10:]]
 
-	# knn.fit(iris_X_train, iris_y_train) 
-	# print(knn.predict(iris_X_test))
+	knn.fit(iris_X_train, iris_y_train) 
+	print(knn.predict(iris_X_test))
 
 	# Use the GridSearch for choosing the best n_neighbors 
 	# parameter on the Image Segmentation dataset.
