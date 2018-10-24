@@ -2,9 +2,12 @@ import sys
 
 import numpy as np
 import pandas as pd
+
+from scipy import stats
 from sklearn import datasets
 from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.model_selection import GridSearchCV
+from sklearn.neighbors import KNeighborsClassifier
 from sklearn.utils import shuffle
 
 np.random.seed(0)
@@ -43,6 +46,7 @@ class KNNClassifier(BaseEstimator, ClassifierMixin):
 
 		self.X_ = X
 		self.y_ = y
+		self.classes_ = np.unique(y)
 
 		return self
 
@@ -57,7 +61,7 @@ class KNNClassifier(BaseEstimator, ClassifierMixin):
 	
 		Returns
 		---------
-		C : shape (n_samples, )
+		C : array of shape (n_samples, )
 			Predicted target values for array X. Class label for
 			each data sample.
 
@@ -74,6 +78,37 @@ class KNNClassifier(BaseEstimator, ClassifierMixin):
 
 
 		return C
+
+	def predict_proba(self, X):
+		"""
+		Return probability estimates for the test data X.
+
+		Parameters
+		---------
+		X : shape (n_samples, n_features)
+			Array of test vectors.
+
+
+		Returns
+		---------
+		p : array of shape (n_samples, n_classes)
+			The class probabilities of the input sample.
+			
+		"""
+
+		classes_proba = np.zeros((X.shape[0], self.classes_.shape[0]))
+
+		for i, x_k in enumerate(X):
+			dist = np.sum(np.square(self.X_ - x_k), axis=1)
+			knneigh_class_ind = self.y_[np.argsort(dist)[0:self.n_neighbors]]
+
+			for c in knneigh_class_ind:
+				classes_proba[i, c] += 1
+		
+		classes_proba = classes_proba / self.n_neighbors
+
+		return classes_proba
+
 
 	def majority_vote_(self, list_vals):
 		"""
@@ -101,7 +136,27 @@ def print_scores(grid_search):
 	    print(mean_score, params)
 
 def main(argv):
-	# Use the GridSearch for choosing the best n_neighbors 
+
+	# Test the classifier
+	iris = datasets.load_iris()
+	iris_X = iris.data
+	iris_y = iris.target
+
+	indices = np.random.permutation(len(iris_X))
+	iris_X_train = iris_X[indices[:-10]]
+	iris_y_train = iris_y[indices[:-10]]
+	iris_X_test  = iris_X[indices[-10:]]
+	iris_y_test  = iris_y[indices[-10:]]
+
+	knn = KNNClassifier(n_neighbors=5)
+	knn.fit(iris_X_train, iris_y_train) 
+	print(knn.predict_proba(iris_X_test))
+
+	knn_d = KNeighborsClassifier(n_neighbors=5)
+	knn_d.fit(iris_X_train, iris_y_train) 
+	print(knn_d.predict_proba(iris_X_test))
+
+	# Use the GridSearch to choose the best n_neighbors 
 	# parameter on the Image Segmentation dataset.
 	
 	# Load data.
