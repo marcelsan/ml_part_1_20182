@@ -70,13 +70,16 @@ class BayesianClassifier(BaseEstimator, ClassifierMixin):
 
 		"""
 
+		if self.fitted is False:
+			raise RuntimeError('The estimator was not fittet. Consider call .fit() first.')
+
 		assert(X.shape[1] == self.theta_.shape[1])
 
 		C = np.zeros((X.shape[0], ), dtype=np.uint)	
 
 		sigma_inv = 1/(self.sigma_ + 1e-5)
 		det_sigma_abs = np.abs(np.prod(self.sigma_, axis=1))
-		A = 1/np.sqrt(np.power(2 * np.pi, self.n_features_) * (det_sigma_abs))
+		A = 1/(np.sqrt(np.power(2 * np.pi, self.n_features_) * (det_sigma_abs)) + 1e-5)
 
 		for i, x_k in enumerate(X):
 			likelihood = A * np.exp((-1/2) * np.sum((x_k - self.theta_) * sigma_inv * (x_k - self.theta_), axis=1))
