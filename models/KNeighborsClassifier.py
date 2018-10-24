@@ -5,7 +5,6 @@ import pandas as pd
 from sklearn import datasets
 from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.model_selection import GridSearchCV
-from sklearn.neighbors import KNeighborsClassifier
 from sklearn.utils import shuffle
 
 np.random.seed(0)
@@ -102,26 +101,11 @@ def print_scores(grid_search):
 	    print(mean_score, params)
 
 def main(argv):
-	# Test the classifier
-	knn = KNNClassifier(n_neighbors=3)
-	iris = datasets.load_iris()
-	iris_X = iris.data
-	iris_y = iris.target
-
-	indices = np.random.permutation(len(iris_X))
-	iris_X_train = iris_X[indices[:-10]]
-	iris_y_train = iris_y[indices[:-10]]
-	iris_X_test  = iris_X[indices[-10:]]
-	iris_y_test  = iris_y[indices[-10:]]
-
-	knn.fit(iris_X_train, iris_y_train) 
-	print(knn.predict(iris_X_test))
-
 	# Use the GridSearch for choosing the best n_neighbors 
 	# parameter on the Image Segmentation dataset.
 	
 	# Load data.
-	image_segmentation = pd.read_csv('database/segmentation.data.txt', delimiter=',')
+	image_segmentation = pd.read_csv('../database/segmentation.data.txt', delimiter=',')
 	image_segmentation = shuffle(image_segmentation)
 
 	X_train = image_segmentation.drop("CLASS", axis=1)

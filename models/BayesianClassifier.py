@@ -1,9 +1,9 @@
 import sys
 
 import numpy as np
-from sklearn.naive_bayes import GaussianNB
+from sklearn.base import BaseEstimator, ClassifierMixin
 
-class BayesianClassifier:
+class BayesianClassifier(BaseEstimator, ClassifierMixin):
 	""" Gaussian Bayesian classifier """
 	
 	def __init__(self, arg=None):
@@ -37,10 +37,11 @@ class BayesianClassifier:
 		self.class_count_ = np.zeros_like(classes)
 
 		for c in classes:
-			X_c = X[y == c, :] 
+			X_c = X[y == c] 
 			N_c = X_c.shape[0]
 
 			mu_c = np.mean(X_c, axis=0)
+
 			self.theta_[c, :] = mu_c
 			self.sigma_[c, : ] = np.mean(np.square(X_c - mu_c), axis=0)
 			self.class_count_[c] = N_c
@@ -69,7 +70,7 @@ class BayesianClassifier:
 		C = np.zeros((X.shape[0], ), dtype=np.uint)
 		P_w = self.class_count_ / np.sum(self.class_count_)
 
-		sigma_inv = 1/self.sigma_
+		sigma_inv = 1/(self.sigma_ + 0.00001)
 
 		for i, x_k in enumerate(X):
 			C[i] = np.argmax(np.exp((-1/2) * np.sum((x_k - self.theta_) * sigma_inv * (x_k - self.theta_), axis=1)) * P_w)
@@ -82,14 +83,9 @@ def main(argv):
 	Y = np.array([0, 0, 0, 1, 1, 1])
 
 	bc = BayesianClassifier()
-	bc.fit(X, Y)	
-
-	clf = GaussianNB()
-	clf.fit(X, Y)
-
+	bc.fit(X, Y)
 
 	print(bc.predict(np.array([[-0.8, -1]])))
-	print(clf.predict(np.array([[-0.8, -1]])))
 
 if __name__ == "__main__":
     main(sys.argv)
