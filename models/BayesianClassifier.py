@@ -74,12 +74,14 @@ class BayesianClassifier(BaseEstimator, ClassifierMixin):
 
 		C = np.zeros((X.shape[0], ), dtype=np.uint)	
 
-		sigma_inv = 1/(self.sigma_ + 0.00001)
-		det_sigma_inv_abs = np.abs(np.prod(sigma_inv, axis=1))
-		A = 1/np.sqrt(np.power(2 * np.pi, self.n_features_) * (det_sigma_inv_abs))
+		sigma_inv = 1/(self.sigma_ + 1e-5)
+		det_sigma_abs = np.abs(np.prod(self.sigma_, axis=1))
+		A = 1/np.sqrt(np.power(2 * np.pi, self.n_features_) * (det_sigma_abs))
 
 		for i, x_k in enumerate(X):
-			C[i] = np.argmax(A * np.exp((-1/2) * np.sum((x_k - self.theta_) * sigma_inv * (x_k - self.theta_), axis=1)) * self.pw_)
+			likelihood = A * np.exp((-1/2) * np.sum((x_k - self.theta_) * sigma_inv * (x_k - self.theta_), axis=1))
+
+			C[i] = np.argmax(likelihood * self.pw_)
 
 		return C
 
@@ -103,8 +105,20 @@ class BayesianClassifier(BaseEstimator, ClassifierMixin):
 		if self.fitted is False:
 			raise RuntimeError('The estimator was not fittet. Consider call .fit() first.')
 
+		probs = np.zeros((X.shape[0], self.class_count_.shape[0]))
 
+		sigma_inv = 1/(self.sigma_ + 1e-5)
+		det_sigma_abs = np.abs(np.prod(self.sigma_, axis=1))
+		A = 1/np.sqrt(np.power(2 * np.pi, self.n_features_) * (det_sigma_abs))
 
+		for i, x_k in enumerate(X):
+			likelihood = A * np.exp((-1/2) * np.sum((x_k - self.theta_)	* sigma_inv * (x_k - self.theta_), axis=1))
+
+			posterior = likelihood * self.pw_
+			sum_likelihood = np.sum(posterior)
+			probs[i] = posterior/sum_likelihood
+
+		return probs
 
 def main(argv):
 	X = np.array([[-1, -1], [-2, -1], [-3, -2], [1, 1], [2, 1], [3, 2]])
@@ -118,6 +132,9 @@ def main(argv):
 
 	print(bc.predict(np.array([[-0.8, -1]])))
 	print(clf.predict(np.array([[-0.8, -1]])))
+
+	print(bc.predict_proba(np.array([[-0.8, -1]])))
+	print(clf.predict_proba(np.array([[-0.8, -1]])))
 
 if __name__ == "__main__":
     main(sys.argv)
