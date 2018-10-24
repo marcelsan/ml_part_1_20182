@@ -132,7 +132,6 @@ def main(argv):
 	grid_search = GridSearchCV(knn_classifier, param_grid=params, cv=5, scoring="accuracy")
 	
 	# Show the results for each view.
-
 	print("[INFO] Complete View")
 	grid_search.fit(X_train.values, y_train)
 	print_scores(grid_search)

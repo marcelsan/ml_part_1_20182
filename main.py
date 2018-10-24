@@ -16,7 +16,7 @@ N_TIMES = 30
 np.random.seed(42)
 
 def main(argv):
-	image_segmentation = pd.read_csv('database/segmentation.data.txt', delimiter=',')
+	image_segmentation = pd.read_csv('database/segmentation.test.txt', delimiter=',')
 	image_segmentation = shuffle(image_segmentation)
 
 	X_train = image_segmentation.drop("CLASS", axis=1).values
@@ -36,7 +36,7 @@ def main(argv):
 
 	print ("== Bayesian Classifier ==")
 	print("Estimativa pontual: %.3f" % (f))
-	print ("Intervalo de confiança: [%.3f, %.3f]" % (f - interval, f + interval))
+	print ("Intervalo de confiança: [%.3f, %.3f]" % ( np.max((0.0, f - interval)), np.min((f + interval, 1.0)) ))
 	print ("")
 
 	# Confidence interval for KNeighborsClassifier
@@ -53,7 +53,7 @@ def main(argv):
 
 	print ("==  KNeighbors Classifier ==")
 	print("Estimativa pontual: %.3f" % (f))
-	print ("Intervalo de confiança: [%.3f, %.3f]" % (f - interval, f + interval))
+	print ("Intervalo de confiança: [%.3f, %.3f]" % ( np.max((0.0, f - interval)), np.min((f + interval, 1.0)) ))
 
 
 if __name__ == "__main__":
