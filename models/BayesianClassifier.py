@@ -7,8 +7,7 @@ from sklearn.naive_bayes import GaussianNB
 class BayesianClassifier(BaseEstimator, ClassifierMixin):
 	""" Gaussian Bayesian classifier """
 	
-	def __init__(self, arg=None):
-		self.arg = arg
+	def __init__(self):
 		self.fitted = False
 
 	def fit(self, X, y):
@@ -49,7 +48,12 @@ class BayesianClassifier(BaseEstimator, ClassifierMixin):
 			self.class_count_[c] = N_c
 		
 		self.pw_ = self.class_count_ / np.sum(self.class_count_)
-		self.fitted = True
+		self.fitted = True		
+		self.sigma_inv = 1/(self.sigma_ + 1e-5)
+
+		# Pre-calculate the first multiplication term of the p(x|w) 
+		det_sigma_abs = np.abs(np.prod(self.sigma_, axis=1))
+		self.A = 1/(np.sqrt(np.power(2 * np.pi, self.n_features_) * (det_sigma_abs)) + 1e-5)
 
 		return self
 
@@ -77,13 +81,8 @@ class BayesianClassifier(BaseEstimator, ClassifierMixin):
 
 		C = np.zeros((X.shape[0], ), dtype=np.uint)	
 
-		sigma_inv = 1/(self.sigma_ + 1e-5)
-		det_sigma_abs = np.abs(np.prod(self.sigma_, axis=1))
-		A = 1/(np.sqrt(np.power(2 * np.pi, self.n_features_) * (det_sigma_abs)) + 1e-5)
-
 		for i, x_k in enumerate(X):
-			likelihood = A * np.exp((-1/2) * np.sum((x_k - self.theta_) * sigma_inv * (x_k - self.theta_), axis=1))
-
+			likelihood = self.A * np.exp((-1/2) * np.sum((x_k - self.theta_) * self.sigma_inv * (x_k - self.theta_), axis=1))
 			C[i] = np.argmax(likelihood * self.pw_)
 
 		return C
@@ -97,7 +96,6 @@ class BayesianClassifier(BaseEstimator, ClassifierMixin):
 		X : array of shape (n_samples, n_features)
 			Array of test vectors.
 
-
 		Returns
 		---------
 		p : array of shape (n_samples, n_classes)
@@ -110,34 +108,11 @@ class BayesianClassifier(BaseEstimator, ClassifierMixin):
 
 		probs = np.zeros((X.shape[0], self.class_count_.shape[0]))
 
-		sigma_inv = 1/(self.sigma_ + 1e-5)
-		det_sigma_abs = np.abs(np.prod(self.sigma_, axis=1))
-		A = 1/np.sqrt(np.power(2 * np.pi, self.n_features_) * (det_sigma_abs))
-
 		for i, x_k in enumerate(X):
-			likelihood = A * np.exp((-1/2) * np.sum((x_k - self.theta_)	* sigma_inv * (x_k - self.theta_), axis=1))
+			likelihood = self.A * np.exp((-1/2) * np.sum((x_k - self.theta_) * self.sigma_inv * (x_k - self.theta_), axis=1))
 
 			posterior = likelihood * self.pw_
 			sum_likelihood = np.sum(posterior)
-			probs[i] = posterior/sum_likelihood
+			probs[i] = posterior/(sum_likelihood + 1e-5)
 
 		return probs
-
-def main(argv):
-	X = np.array([[-1, -1], [-2, -1], [-3, -2], [1, 1], [2, 1], [3, 2]])
-	Y = np.array([0, 0, 0, 1, 1, 1])
-
-	bc = BayesianClassifier()
-	bc.fit(X, Y)
-
-	clf = GaussianNB()
-	clf.fit(X, Y)
-
-	print(bc.predict(np.array([[-0.8, -1]])))
-	print(clf.predict(np.array([[-0.8, -1]])))
-
-	print(bc.predict_proba(np.array([[-0.8, -1]])))
-	print(clf.predict_proba(np.array([[-0.8, -1]])))
-
-if __name__ == "__main__":
-    main(sys.argv)
