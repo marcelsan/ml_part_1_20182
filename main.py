@@ -8,7 +8,7 @@ from DataLoader import DataLoader
 from models.CombinedModelsClassifier import CombinedModelsClassifier
 from models.BayesianClassifier import BayesianClassifier
 from models.KNeighborsClassifier import KNNClassifier
-from Utils import cofidence_interval
+from Utils import cofidence_interval, friedman_test
 
 np.random.seed(42)
 
@@ -59,6 +59,18 @@ def main(argv):
 	print ("==  Combined Classifier ==")
 	print("Estimativa pontual: %.3f" % accuracy_score(y_test, y_pred))
 	print ("Intervalo de confiança: [%.3f, %.3f]" % (min_interval,  max_interval))
+	print("")
+
+	############
+
+	print ("==  Friedman Test ==")
+	friedman_test([bc, knn_classifier, combined_classfier],
+				  X_train, y_train,
+				  fit_params=[
+				  	None,
+				  	{'n_neighbors':1},
+				  	{'n_neighbors':3, 'view1_columns' : view1_columns, 'view2_columns' : view2_columns}])
+
 
 if __name__ == "__main__":
     main(sys.argv)

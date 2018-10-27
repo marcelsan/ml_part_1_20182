@@ -49,3 +49,33 @@ def cofidence_interval(clf, X, y, n_times=30, k=10, fit_params=None):
 	interval = 1.96 * math.sqrt( (f * (1 - f)) / n_times)  # 95% confidance level.
 
 	return (np.max((0.0, f - interval)), np.min((f + interval, 1.0)))
+
+def friedman_test(clfs, X, y, n_times=30, folds=10, fit_params=None):
+	critical_value = 62.79428 # (for alpha = 0.95 and F_(k−1,(k−1)(N−1)) )
+	k = len(clfs)
+	df = k-1 # Degrees of freedom
+
+	assert(df == 2)
+
+	ntimes_folds = np.zeros((n_times, k))
+
+	for i, clf in enumerate(clfs):
+		for j in range(n_times):
+			X_, y_ = shuffle(X, y, random_state=j)
+			skf = StratifiedKFold(n_splits=folds)
+			ntimes_folds[j, i] = np.mean(cross_val_score(clf, X_, y_, scoring='accuracy', cv=skf, fit_params=fit_params[i]))
+
+	ntimes_folds = np.argsort(ntimes_folds) + 1
+	ranks = np.sum(ntimes_folds, axis=0)/n_times
+
+	X_r2 = (12/(n_times*k*(k+1))) * np.sum(ranks ** 2) - 3 * n_times * (k+1)
+
+	F_F = ((n_times-1) * X_r2 * X_r2)/(n_times*(k-1) - X_r2 * X_r2)
+
+	if F_F > critical_value:
+		print("Reject. There is a difference between the three classifiers.")
+
+		CD =  2.344 * np.sqrt((k*(k+1))/(6 * n_times))
+	else:
+		print("Do not reject.")
+
