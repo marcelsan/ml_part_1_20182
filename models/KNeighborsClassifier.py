@@ -25,6 +25,7 @@ class KNNClassifier(BaseEstimator, ClassifierMixin):
 	"""
 
 	def __init__(self, n_neighbors=3):
+		self.name_ = "KNNClassifier"
 		self.n_neighbors = n_neighbors
 	
 	def fit(self, X, y, **kwargs):

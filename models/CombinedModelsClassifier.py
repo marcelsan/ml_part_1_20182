@@ -37,6 +37,8 @@ class CombinedModelsClassifier(BaseEstimator, ClassifierMixin):
 	"""
 
 	def __init__(self, n_neighbors, view1_columns, view2_columns):
+		self.name_ = "CombinedModelsClassifier"
+
 		# Number of views
 		self.L = 3
 

@@ -50,32 +50,43 @@ def cofidence_interval(clf, X, y, n_times=30, k=10, fit_params=None):
 
 	return (np.max((0.0, f - interval)), np.min((f + interval, 1.0)))
 
-def friedman_test(clfs, X, y, n_times=30, folds=10, fit_params=None):
-	critical_value = 62.79428 # (for alpha = 0.95 and F_(k−1,(k−1)(N−1)) )
+def friedman_test(clfs, X, y, fit_params=None):
+	N = 30 
 	k = len(clfs)
 	df = k-1 # Degrees of freedom
 
-	assert(df == 2)
+	assert(k == 3) # In this case, we know beforehand that we compare 3 classifiers.
 
-	ntimes_folds = np.zeros((n_times, k))
-
+	ntimes_folds = np.zeros((N, k))
 	for i, clf in enumerate(clfs):
-		for j in range(n_times):
+		for j in range(N):
 			X_, y_ = shuffle(X, y, random_state=j)
-			skf = StratifiedKFold(n_splits=folds)
+			skf = StratifiedKFold(n_splits=10)
 			ntimes_folds[j, i] = np.mean(cross_val_score(clf, X_, y_, scoring='accuracy', cv=skf, fit_params=fit_params[i]))
 
 	ntimes_folds = np.argsort(ntimes_folds) + 1
-	ranks = np.sum(ntimes_folds, axis=0)/n_times
+	ranks = np.sum(ntimes_folds, axis=0)/N
+	ranks_ = ranks - (k+1)/2
 
-	X_r2 = (12/(n_times*k*(k+1))) * np.sum(ranks ** 2) - 3 * n_times * (k+1)
+	X_r2 = (12*N/(k*(k+1))) * np.sum(ranks_ ** 2)
 
-	F_F = ((n_times-1) * X_r2 * X_r2)/(n_times*(k-1) - X_r2 * X_r2)
-
-	if F_F > critical_value:
+	if X_r2 > 5.991: # (Qui-squared k=2, for alpha = 0.95 )
 		print("Reject. There is a difference between the three classifiers.")
 
-		CD =  2.344 * np.sqrt((k*(k+1))/(6 * n_times))
+		CD =  2.344 * np.sqrt((k*(k+1))/(6 * N))
+
+		# Compare classifier 0 to 1
+		if np.abs(ranks[0] - ranks[1]) >= CD:
+			print("The classifier %s is different to %s." %(clfs[0].name_, clfs[1].name_))
+
+		# Compare classifier 1 to 2
+		if np.abs(ranks[1] - ranks[2]) >= CD:
+			print("The classifier %s is different to %s." %(clfs[1].name_, clfs[2].name_))
+
+		# Compare classifier 0 to 2
+		if np.abs(ranks[0] - ranks[2]) >= CD:
+			print("The classifier %s is different to %s." %(clfs[0].name_, clfs[2].name_))
+
 	else:
 		print("Do not reject.")
 

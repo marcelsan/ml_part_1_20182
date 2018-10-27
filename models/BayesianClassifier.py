@@ -9,6 +9,7 @@ class BayesianClassifier(BaseEstimator, ClassifierMixin):
 	
 	def __init__(self):
 		self.fitted = False
+		self.name_ = "BayesianClassifier"
 
 	def fit(self, X, y):
 		"""
