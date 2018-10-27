@@ -71,22 +71,16 @@ def friedman_test(clfs, X, y, fit_params=None):
 	X_r2 = (12*N/(k*(k+1))) * np.sum(ranks_ ** 2)
 
 	if X_r2 > 5.991: # (Qui-squared k=2, for alpha = 0.95 )
-		print("Reject. There is a difference between the three classifiers.")
+		print("Reject H0. There is a difference between the three classifiers.")
 
 		CD =  2.344 * np.sqrt((k*(k+1))/(6 * N))
 
-		# Compare classifier 0 to 1
-		if np.abs(ranks[0] - ranks[1]) >= CD:
-			print("The classifier %s is different to %s." %(clfs[0].name_, clfs[1].name_))
-
-		# Compare classifier 1 to 2
-		if np.abs(ranks[1] - ranks[2]) >= CD:
-			print("The classifier %s is different to %s." %(clfs[1].name_, clfs[2].name_))
-
-		# Compare classifier 0 to 2
-		if np.abs(ranks[0] - ranks[2]) >= CD:
-			print("The classifier %s is different to %s." %(clfs[0].name_, clfs[2].name_))
+		# Compare the classifiers
+		for i in range(k):
+			for j in range(i+1, k):
+				if np.abs(ranks[i] - ranks[j]) >= CD:
+					print("The classifier %s is different to %s." %(clfs[i].name_, clfs[j].name_))
 
 	else:
-		print("Do not reject.")
+		print("Do not reject H0.")
 
