@@ -52,8 +52,6 @@ class KMeansClustering:
 
 def main(argv):
 
-	colors = 10*["g","r","c","b","k"]
-
 	X, y_true = make_blobs(n_samples=300, centers=3, cluster_std=0.60, random_state=0)
 
 	kmeans = KMeansClustering(c=3).fit(X)	
@@ -61,12 +59,15 @@ def main(argv):
 	for centroid in kmeans.cluster_centers_:
 		plt.scatter(centroid[0], centroid[1], marker="o", color="k", s=150, linewidths=5)
 
-
+	colors = 10*["g","r","c","b","k"]
+	
 	for i, classification in enumerate(kmeans.labels_):
 		color = colors[classification]
 		plt.scatter(X[i][0], X[i][1], marker="x", color=color, s=150, linewidths=5)
 
 	plt.show()
+
+	print(kmeans.labels_)
 
 if __name__ == "__main__":
     main(sys.argv)
