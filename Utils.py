@@ -64,6 +64,7 @@ def friedman_test(clfs, X, y, fit_params=None):
 			skf = StratifiedKFold(n_splits=10)
 			ntimes_folds[j, i] = np.mean(cross_val_score(clf, X_, y_, scoring='accuracy', cv=skf, fit_params=fit_params[i]))
 
+	# Friedman test.
 	ntimes_folds = np.argsort(ntimes_folds) + 1
 	ranks = np.sum(ntimes_folds, axis=0)/N
 	ranks_ = ranks - (k+1)/2
@@ -73,9 +74,8 @@ def friedman_test(clfs, X, y, fit_params=None):
 	if X_r2 > 5.991: # (Qui-squared k=2, for alpha = 0.95 )
 		print("Reject H0. There is a difference between the three classifiers.")
 
-		CD =  2.344 * np.sqrt((k*(k+1))/(6 * N))
-
 		# Compare the classifiers
+		CD =  2.344 * np.sqrt((k*(k+1))/(6 * N))
 		for i in range(k):
 			for j in range(i+1, k):
 				if np.abs(ranks[i] - ranks[j]) >= CD:
