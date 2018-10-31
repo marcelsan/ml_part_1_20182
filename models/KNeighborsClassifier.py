@@ -78,8 +78,7 @@ class KNNClassifier(BaseEstimator, ClassifierMixin):
 		for i, x_k in enumerate(X):
 			dist = np.sum(np.square(self.X_ - x_k), axis=1)
 			idx = np.argsort(dist)[0:self.n_neighbors]
-			C[i] = self.majority_vote_(self.y_[idx])
-
+			C[i] = np.argmax(self.compute_class_weights_(x_k, idx))
 
 		return C
 
@@ -100,19 +99,15 @@ class KNNClassifier(BaseEstimator, ClassifierMixin):
 			
 		"""
 
-		classes_proba = np.zeros((X.shape[0], self.classes_.shape[0]))
+		classes_prob = np.zeros((X.shape[0], self.classes_.shape[0]))
 
 		for i, x_k in enumerate(X):
 			dist = np.sum(np.square(self.X_ - x_k), axis=1)
-			knneigh_class_ind = self.y_[np.argsort(dist)[0:self.n_neighbors]]
-
-			for c in knneigh_class_ind:
-				classes_proba[i, c] += 1
+			idx = np.argsort(dist)[0:self.n_neighbors]
+			class_weight_sums = self.compute_class_weights_(x_k, idx)
+			classes_prob[i] = class_weight_sums / np.sum(class_weight_sums)
 		
-		classes_proba = classes_proba / self.n_neighbors
-
-		return classes_proba
-
+		return classes_prob
 
 	def majority_vote_(self, list_vals):
 		"""
@@ -133,6 +128,36 @@ class KNNClassifier(BaseEstimator, ClassifierMixin):
 		a = max(map(lambda val: (as_.count(val), val), set(as_)))[1]
 
 		return a
+
+	def compute_class_weights_(self, x, neighbor_indices):
+		"""
+		Perform a weighted vote on the input array. The weights used for the 
+		neighbors are 1/dist, where dist is the euclidean distance from the
+		sample to the neighbor.
+
+		Parameters
+		---------
+		x : shape (n_features, ).
+		  The vector to be classified.
+	
+		Returns
+		---------
+		a: int
+			The class with the greatest weighted sum.
+		"""
+
+		neighbor_distances = np.sqrt(np.sum(np.square(self.X_[neighbor_indices] - x), axis=1)) + 1e-5
+		neighbor_weights = 1.0 / neighbor_distances
+		neighbor_labels = self.y_[neighbor_indices]
+
+		weight_sums = np.zeros(self.classes_.shape[0])
+		
+		for c in range(self.classes_.shape[0]):
+			indices = [i for i, label in enumerate(neighbor_labels) if label == c]
+			weights = neighbor_weights[indices]
+			weight_sums[c] = np.sum(weights)
+
+		return weight_sums
 
 def print_scores(grid_search):
 	cvres = grid_search.cv_results_
