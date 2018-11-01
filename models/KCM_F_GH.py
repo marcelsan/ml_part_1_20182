@@ -41,7 +41,13 @@ class KCM_F_GHClustering:
 		distances = self.distance_to_clusters_(clusters)
 		self.labels_ = np.argmin(distances, axis=1)
 
+		iterations = 0
+
 		while True:
+			iterations += 1
+
+			print("[INFO] Running iteration %d." %(iterations))
+
 			# Obtain the clusters from the labels.
 			clusters = self.build_clusters_(self.labels_)
 
@@ -59,6 +65,8 @@ class KCM_F_GHClustering:
 				break
 			
 			self.labels_ = labels
+
+		print("[INFO] Total number of iterations until converge: %d." %(iterations))
 
 		return self
 
@@ -102,7 +110,7 @@ class KCM_F_GHClustering:
 				pairs = itertools.product(cluster, cluster)
 
 				# Calculate the pi_j (for j = 1...p)
-				pi[j] += 1/P * np.sum([self.kernel_(self.X_[r], self.X_[s])*(self.X_[r][j] - self.X_[s][j]) ** 2 for (r, s) in pairs])
+				pi[j] += 1/P * np.sum([self.kernel_(self.X_[r], self.X_[s])*(self.X_[r][j] - self.X_[s][j]) ** 2 for (r, s) in pairs if r < s])
 
 		# Evaluate the equation 24.
 		self.inv_s2_ = self.inv_sigma_squared * np.power(np.prod(pi), 1/p)/pi
@@ -140,7 +148,7 @@ class KCM_F_GHClustering:
 
 				# Evaluate the second term of equation 21. Calculate the K(x_r, x_s) for all combination (x_r, x_s) 
 				# of elements of the cluster.
-				sum_kernel_xr_xs = np.sum([self.kernel_(self.X_[r], self.X_[s]) for (r, s) in pairs])
+				sum_kernel_xr_xs = np.sum([self.kernel_(self.X_[r], self.X_[s]) for (r, s) in pairs if r < s])
 
 				# Evaluate the full equation (equation 21).
 				distances[i, j] = 1 - 2 * sum_kernel_xk_xl/Pj + sum_kernel_xr_xs/(Pj ** 2)
