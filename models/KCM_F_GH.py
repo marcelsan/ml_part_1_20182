@@ -9,6 +9,20 @@ from sklearn.datasets.samples_generator import make_blobs
 np.random.seed(42)
 
 class KCM_F_GHClustering:
+	"""
+	Implements KCM-F-GH algorithm proposed in 'Gaussian kernel c-means hard 
+	clustering algorithms with automated computation of the width 
+	hyper-parameters'.
+
+	Reference:
+	---------
+	DE CARVALHO, Francisco de AT et al. Gaussian kernel c-means hard clustering algorithms 
+	with automated computation of the width hyper-parameters. 
+	Pattern Recognition, v. 79, p. 370-386, 2018.
+	
+	Available at: https://www.sciencedirect.com/science/article/pii/S0031320318300712
+	"""
+
 	def __init__(self, c):
 		self.c_ = c  # number of clusters.
 
