@@ -134,21 +134,21 @@ class KCM_F_GHClustering:
 		
 		distances = np.zeros((self.X_.shape[0], self.c_))
 
-		for i, x_k in enumerate(self.X_):
-			for j, cluster in enumerate(clusters):
-				
-				# Size of the j-th cluster.
-				Pj = len(cluster)
+		for j, cluster in enumerate(clusters):
+			
+			# Size of the j-th cluster.
+			Pj = len(cluster)
 
+			# Find all combinations of elements of the cluster.
+			pairs = itertools.product(cluster, repeat=2)
+
+			# Evaluate the second term of equation 21. Calculate the K(x_r, x_s) for all combination (x_r, x_s) 
+			# of elements of the cluster.
+			sum_kernel_xr_xs = np.sum([self.kernel_(self.X_[r], self.X_[s]) for (r, s) in pairs if r < s])
+
+			for i, x_k in enumerate(self.X_):
 				# Evaluate the first term of equation 21. Calculate the K(x_k, x_l) for all elements x_l of the cluster.
 				sum_kernel_xk_xl = np.sum([self.kernel_(self.X_[l], x_k) for l in cluster])
-
-				# Find all combinations of elements of the cluster.
-				pairs = itertools.product(cluster, cluster)
-
-				# Evaluate the second term of equation 21. Calculate the K(x_r, x_s) for all combination (x_r, x_s) 
-				# of elements of the cluster.
-				sum_kernel_xr_xs = np.sum([self.kernel_(self.X_[r], self.X_[s]) for (r, s) in pairs if r < s])
 
 				# Evaluate the full equation (equation 21).
 				distances[i, j] = 1 - 2 * sum_kernel_xk_xl/Pj + sum_kernel_xr_xs/(Pj ** 2)
