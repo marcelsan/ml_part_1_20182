@@ -57,8 +57,8 @@ class KCM_F_GHClustering:
 			# Stop condition.
 			if np.all(self.labels_ == labels):
 				break
-			else:
-				self.labels_ = labels
+			
+			self.labels_ = labels
 
 		return self
 
