@@ -66,8 +66,7 @@ def main(argv):
 	print ("==  Friedman Test ==")
 	friedman_test([bc, knn_classifier, combined_classfier],
 				  X_train, y_train,
-				  fit_params=[
-				  	None,
+				  fit_params=[None,
 				  	{'n_neighbors':1},
 				  	{'n_neighbors':3, 'view1_columns' : view1_columns, 'view2_columns' : view2_columns}])
 
