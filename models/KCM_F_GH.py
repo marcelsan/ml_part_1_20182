@@ -13,11 +13,24 @@ class KCM_F_GHClustering:
 		self.c_ = c  # number of clusters.
 
 	def fit(self, X):
+		"""
+		Implement the KCM-F-GH algorithm and store the obtained clusters.
 
-		# Init X
+		Parameters
+		---------
+		X : shape (n_samples, n_features)
+			Training vectors, where n_samples is the number of training samples
+			and n_features is the number of features.
+
+		Returns
+		---------
+		self : object
+		"""
+
+		# Init the internal X variable.
 		self.X_ = X
 
-		# Initialize the 1/s^2 variable.
+		# Initialize the 1/s^2 variable (the width parameter).
 		self.init_inv_s2_()
 
 		# Initialize clusters.
@@ -29,14 +42,19 @@ class KCM_F_GHClustering:
 		self.labels_ = np.argmin(distances, axis=1)
 
 		while True:
-			clusters = self.get_clusters_(self.labels_)
+			# Obtain the clusters from the labels.
+			clusters = self.build_clusters_(self.labels_)
 
+			# Update the width parameters.
 			self.update_inv_s2_(clusters)
 			
+			# Representation step. Compute the distances of each element for all clusters.
 			distances = self.distance_to_clusters_(clusters)
+			
+			# Allocation step. Assign each element for the closest cluster.
 			labels = np.argmin(distances, axis=1)
 
-			# Assing point to the closest cluster.
+			# Stop condition.
 			if np.all(self.labels_ == labels):
 				break
 			else:
@@ -44,27 +62,68 @@ class KCM_F_GHClustering:
 
 		return self
 
-	def get_clusters_(self, labels):
+	def build_clusters_(self, labels):
+		'''
+			Build clusters representation from labels.
+		'''
 		return [ np.where(labels == i)[0].tolist() for i in range(self.c_)]
 
 	def update_inv_s2_(self, clusters):
+		"""
+		Computation of the width parameters for each dimension.
 
+		Parameters
+		---------
+		clusters : list of list of Int.
+				   Each i-element of list is a list of elements that belongs to the cluster
+				   index by i.
+
+				   Example:
+				   [[1,2], [3], [4, 5]]
+
+				   In this case, the elements 1 and 2 belongs to cluster 0, the element 3 belongs to 
+				   cluster 1 and so on.
+
+		"""
+
+		# Number of features of the training data.
 		p = self.X_.shape[1]
+
+		# Initialize the pi term.
 		pi = np.zeros(p)
 
-		# Calculate pi
+		# Calculate the pi term
 		for j in range(p):
 			for cluster in clusters:
-				pi[j] += 1/(len(cluster)) * np.sum([self.kernel(self.X_[r], self.X_[s])*(self.X_[r][j] - self.X_[s][j]) ** 2 for (r, s) in itertools.product(cluster, cluster)])
+				# Size of the cluster.
+				P = len(cluster)
 
-		inv_s2 = self.inv_sigma_squared * np.power(np.prod(pi), 1/p)/pi
+				# Find all combinations of elements of the cluster.
+				pairs = itertools.product(cluster, cluster)
 
-		self.inv_s2_ = inv_s2
+				# Calculate the pi_j (for j = 1...p)
+				pi[j] += 1/P * np.sum([self.kernel_(self.X_[r], self.X_[s])*(self.X_[r][j] - self.X_[s][j]) ** 2 for (r, s) in pairs])
+
+		# Evaluate the equation 24.
+		self.inv_s2_ = self.inv_sigma_squared * np.power(np.prod(pi), 1/p)/pi
 
 	def distance_to_clusters_(self, clusters):
-		'''
-			Equation 21
-		'''
+		"""
+		Evaluate the distance of each element on training set to all clusters.
+
+		Parameters
+		---------
+		clusters : list of list of Int.
+				   Each i-element of list is a list of elements that belongs to the cluster
+				   index by i.
+
+				   Example:
+				   [[1,2], [3], [4, 5]]
+
+				   In this case, the elements 1 and 2 belongs to cluster 0, the element 3 belongs to 
+				   cluster 1 and so on.
+		"""
+		
 		distances = np.zeros((self.X_.shape[0], self.c_))
 
 		for i, x_k in enumerate(self.X_):
@@ -73,9 +132,18 @@ class KCM_F_GHClustering:
 				# Size of the j-th cluster.
 				Pj = len(cluster)
 
-				distances[i, j] = 1 - 2 * np.sum([self.kernel(self.X_[l], x_k) for l in cluster])/ Pj + \
-									np.sum([self.kernel(self.X_[r], self.X_[s]) for (r, s) in itertools.product(cluster, cluster)])/(Pj ** 2)
+				# Evaluate the first term of equation 21. Calculate the K(x_k, x_l) for all elements x_l of the cluster.
+				sum_kernel_xk_xl = np.sum([self.kernel_(self.X_[l], x_k) for l in cluster])
 
+				# Find all combinations of elements of the cluster.
+				pairs = itertools.product(cluster, cluster)
+
+				# Evaluate the second term of equation 21. Calculate the K(x_r, x_s) for all combination (x_r, x_s) 
+				# of elements of the cluster.
+				sum_kernel_xr_xs = np.sum([self.kernel_(self.X_[r], self.X_[s]) for (r, s) in pairs])
+
+				# Evaluate the full equation (equation 21).
+				distances[i, j] = 1 - 2 * sum_kernel_xk_xl/Pj + sum_kernel_xr_xs/(Pj ** 2)
 
 		return distances
 
@@ -87,18 +155,26 @@ class KCM_F_GHClustering:
 		# Calculate the distance between each two sample of X.
 		distances = [np.linalg.norm(self.X_[i] - self.X_[j]) for (i, j) in itertools.product(idx, idx) if i < j]
 
-		# Calculate sigma squared.
+		# Calculate the inverse sigma squared.
 		p10, p90 = np.percentile(distances, [10, 90])
-		inv_sigma_squared = (p10 + p90)/2.0
+		sigma_squared = 0.5 * (p10 + p90)
 
-		# Initialize inv_sigma2_
-		self.inv_s2_ = np.ones(self.X_.shape[1]) * 1/inv_sigma_squared
+		# Initialize 1/s^2
+		self.inv_s2_ = np.ones(self.X_.shape[1]) * 1/sigma_squared
 
 		# Initialize 1/sigma^2
-		self.inv_sigma_squared = (1/inv_sigma_squared)
+		self.inv_sigma_squared = (1/sigma_squared)
 	
+	def kernel_(self, x_l, x_k):
+		"""	
+		Compute the Gaussian kernel. Where inv_s2_ is the width parameter.
+	
+		Parameters
+		---------
+		x_l, x_k : numpy.array of shape (n_features, ).
 
-	def kernel(self, x_l, x_k):
+		"""
+
 		# Ensure that the vectors have the same length.
 		assert(x_l.shape == x_k.shape)
 
