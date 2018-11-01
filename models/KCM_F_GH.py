@@ -26,7 +26,7 @@ class KCM_F_GHClustering:
 	def __init__(self, c):
 		self.c_ = c  # number of clusters.
 
-	def fit(self, X):
+	def fit(self, X, y=None):
 		"""
 		Implement the KCM-F-GH algorithm and store the obtained clusters.
 
@@ -52,7 +52,7 @@ class KCM_F_GHClustering:
 		clusters = centers_idx.reshape((self.c_, 1)).tolist()
 
 		# Initial labels
-		distances = self.distance_to_clusters_(clusters)
+		distances = self.distance_to_clusters_(self.X_, clusters)
 		self.labels_ = np.argmin(distances, axis=1)
 
 		iterations = 0
@@ -63,13 +63,13 @@ class KCM_F_GHClustering:
 			print("[INFO] Running iteration %d." %(iterations))
 
 			# Obtain the clusters from the labels.
-			clusters = self.build_clusters_(self.labels_)
+			self.clusters = self.build_clusters_(self.labels_)
 
 			# Update the width parameters.
-			self.update_inv_s2_(clusters)
+			self.update_inv_s2_(self.clusters)
 			
 			# Representation step. Compute the distances of each element for all clusters.
-			distances = self.distance_to_clusters_(clusters)
+			distances = self.distance_to_clusters_(self.X_, self.clusters)
 			
 			# Allocation step. Assign each element for the closest cluster.
 			labels = np.argmin(distances, axis=1)
@@ -83,6 +83,17 @@ class KCM_F_GHClustering:
 		print("[INFO] Total number of iterations until converge: %d." %(iterations))
 
 		return self
+
+	def predict(self, X):
+		distances = self.distance_to_clusters_(X, self.clusters)
+			
+		# Allocation step. Assign each element for the closest cluster.
+		labels = np.argmin(distances, axis=1)
+
+		# ToDo: update the labels in order to correspond to the right labels acording to the training set.
+
+		return labels
+
 
 	def build_clusters_(self, labels):
 		'''
@@ -129,7 +140,7 @@ class KCM_F_GHClustering:
 		# Evaluate the equation 24.
 		self.inv_s2_ = self.inv_sigma_squared * np.power(np.prod(pi), 1/p)/pi
 
-	def distance_to_clusters_(self, clusters):
+	def distance_to_clusters_(self, X, clusters):
 		"""
 		Evaluate the distance of each element on training set to all clusters.
 
@@ -146,7 +157,7 @@ class KCM_F_GHClustering:
 				   cluster 1 and so on.
 		"""
 		
-		distances = np.zeros((self.X_.shape[0], self.c_))
+		distances = np.zeros((X.shape[0], self.c_))
 
 		for j, cluster in enumerate(clusters):
 			
@@ -160,7 +171,7 @@ class KCM_F_GHClustering:
 			# of elements of the cluster.
 			sum_kernel_xr_xs = np.sum([self.kernel_(self.X_[r], self.X_[s]) for (r, s) in pairs if r < s])
 
-			for i, x_k in enumerate(self.X_):
+			for i, x_k in enumerate(X):
 				# Evaluate the first term of equation 21. Calculate the K(x_k, x_l) for all elements x_l of the cluster.
 				sum_kernel_xk_xl = np.sum([self.kernel_(self.X_[l], x_k) for l in cluster])
 
