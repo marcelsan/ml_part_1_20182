@@ -94,7 +94,6 @@ class KCM_F_GHClustering:
 
 		return labels
 
-
 	def build_clusters_(self, labels):
 		'''
 			Build clusters representation from labels.
@@ -216,7 +215,7 @@ class KCM_F_GHClustering:
 def main(argv):
 	X, y_true = make_blobs(n_samples=300, centers=3, cluster_std=0.60, random_state=0)
 
-	kcm = KCM_F_GHClustering(c=3).fit(X)	
+	kcm = KCM_F_GHClustering(c=3).fit(X)
 
 	colors = 10*["g","r","c","b","k"]
 
