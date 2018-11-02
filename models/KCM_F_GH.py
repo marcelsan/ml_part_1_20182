@@ -86,11 +86,11 @@ class KCM_F_GHClustering:
 
 	def predict(self, X):
 		distances = self.distance_to_clusters_(X, self.clusters)
-			
+		
+		self.cost_ = np.sum(distances)
+
 		# Allocation step. Assign each element for the closest cluster.
 		labels = np.argmin(distances, axis=1)
-
-		# ToDo: update the labels in order to correspond to the right labels acording to the training set.
 
 		return labels
 

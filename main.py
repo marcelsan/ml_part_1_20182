@@ -1,3 +1,4 @@
+import argparse
 import sys
 
 import numpy as np
@@ -12,11 +13,14 @@ from Utils import cofidence_interval, friedman_test
 
 np.random.seed(42)
 
-# Initializes the views.
-VIEW1_COLUMNS = [0,1,2,3,4,5,6,7,8]
-VIEW2_COLUMNS = [9,10,11,12,13,14,15,16,17,18]
-
 def evaluate_classifiers(X_train, y_train, X_test, y_test):
+	'''
+		Evaluate the classification algorithms.
+	'''
+
+	# Initializes the views.
+	VIEW1_COLUMNS = [0,1,2,3,4,5,6,7,8]
+	VIEW2_COLUMNS = [9,10,11,12,13,14,15,16,17,18]
 
 	############ BayesianClassifier  ############
 
@@ -73,14 +77,73 @@ def evaluate_classifiers(X_train, y_train, X_test, y_test):
 				  	{'n_neighbors':1},
 				  	{'n_neighbors':3, 'view1_columns' : VIEW1_COLUMNS, 'view2_columns' : VIEW2_COLUMNS}])
 
-def main(argv):
+def evaluate_clustering(X_train, y_train, X_test, y_test):
+	'''
+		Evaluate the clustering algorithms.
+	'''
+
+	# Initializes the views.
+	# We removed the column 2 because the KCM method is not suitable to features with
+	# all repeated values.
+	SHAPE_VIEW_COLUMNS = [0,1,3,5,6,7,8]
+	RGB_VIEW_COLUMNS = [9,10,11,12,13,14,15,16,17,18]
+	FULL_VIEW_COLUMNS = SHAPE_VIEW_COLUMNS + RGB_VIEW_COLUMNS
+
+	X_test_shape_view = X_test[:, SHAPE_VIEW_COLUMNS]
+	X_test_rgb_view = X_test[:, RGB_VIEW_COLUMNS]
+	X_test_full_view = X_test[:, FULL_VIEW_COLUMNS]
+
+	############ Shape View  ############
+
+	kcm = KCM_F_GHClustering(c=7).fit(X_test_shape_view)
+	kcm_labels = kcm.predict(X_test_shape_view)
+
+	rand_score = adjusted_rand_score(kcm_labels, y_test)
+
+	print ("== Shape View ==")
+	print("Rand Score: %.3f" %rand_score)
+
+	############ RGB View  ############
+
+	kcm = KCM_F_GHClustering(c=7).fit(X_test_rgb_view)
+	kcm_labels = kcm.predict(X_test_rgb_view)
+
+	rand_score = adjusted_rand_score(kcm_labels, y_test)
+
+	print ("== RGB View ==")
+	print("Rand Score: %.3f" %rand_score)
+
+	############ Full View  ############
+
+	kcm = KCM_F_GHClustering(c=7).fit(X_test_full_view)
+	kcm_labels = kcm.predict(X_test_full_view)
+
+	rand_score = adjusted_rand_score(kcm_labels, y_test)
+
+	print ("== Full View ==")
+	print("Rand Score: %.3f" %rand_score)
+
+def main(args):
 	# Load and prepare the dataset.
 	loader = DataLoader()
 	loader.load(train_dir='database/segmentation.data.txt',  test_dir='database/segmentation.test.txt')
 
 	X_train, y_train, X_test, y_test = loader.data()
 
-	evaluate_classifiers(X_train, y_train, X_test, y_test)
+	if not args.eval_classifiers and not args.eval_clustering:
+		evaluate_classifiers(X_train, y_train, X_test, y_test)
+		evaluate_clustering(X_train, y_train, X_test, y_test)
+	else:
+		if args.eval_classifiers:
+			evaluate_classifiers(X_train, y_train, X_test, y_test)
+
+		if args.eval_clustering:
+			evaluate_clustering(X_train, y_train, X_test, y_test)
 
 if __name__ == "__main__":
-    main(sys.argv)
+	parser = argparse.ArgumentParser(description = '')
+	parser.add_argument('--eval_classifiers', help='Evaluate the classification algorithms.', action='store_true', default=False)
+	parser.add_argument('--eval_clustering', help='Evaluate the clustering algorithms.', action='store_true', default=False)
+	args = parser.parse_args()
+
+	main(args)
