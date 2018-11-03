@@ -23,8 +23,20 @@ class KCM_F_GHClustering:
 	Available at: https://www.sciencedirect.com/science/article/pii/S0031320318300712
 	"""
 
-	def __init__(self, c):
+	def __init__(self, c, verbose=True):
+		"""
+		Parameters
+		---------
+		c : Int
+			Number of clusters.
+
+		verbose: bool, default: False
+			Option for producing detailed logging information.
+			If True, it enables verbose output.
+		"""
+
 		self.c_ = c  # number of clusters.
+		self.verbose_ = verbose 
 
 	def fit(self, X, y=None):
 		"""
@@ -57,10 +69,14 @@ class KCM_F_GHClustering:
 
 		iterations = 0
 
+		if self.verbose_:
+			print("Running iteration: ", end='', flush=True)
+		
 		while True:
 			iterations += 1
 
-			print("[INFO] Running iteration %d." %(iterations))
+			if self.verbose_:
+				print("%d " %(iterations), end='', flush=True)
 
 			# Obtain the clusters from the labels.
 			self.clusters = self.build_clusters_(self.labels_)
@@ -80,7 +96,9 @@ class KCM_F_GHClustering:
 			
 			self.labels_ = labels
 
-		print("[INFO] Total number of iterations until converge: %d." %(iterations))
+		if self.verbose_:
+			print()
+			print("Total number of iterations until converge: %d" %(iterations))
 
 		return self
 

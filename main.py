@@ -89,38 +89,37 @@ def evaluate_clustering(X_train, y_train, X_test, y_test):
 	RGB_VIEW_COLUMNS = [9,10,11,12,13,14,15,16,17,18]
 	FULL_VIEW_COLUMNS = SHAPE_VIEW_COLUMNS + RGB_VIEW_COLUMNS
 
-	X_test_shape_view = X_test[:, SHAPE_VIEW_COLUMNS]
-	X_test_rgb_view = X_test[:, RGB_VIEW_COLUMNS]
-	X_test_full_view = X_test[:, FULL_VIEW_COLUMNS]
+	X_test_shape_view = X_train[:, SHAPE_VIEW_COLUMNS]
+	X_test_rgb_view = X_train[:, RGB_VIEW_COLUMNS]
+	X_test_full_view = X_train[:, FULL_VIEW_COLUMNS]
 
 	############ Shape View  ############
-
+	print ("== Shape View ==")
 	kcm = KCM_F_GHClustering(c=7).fit(X_test_shape_view)
 	kcm_labels = kcm.predict(X_test_shape_view)
 
-	rand_score = adjusted_rand_score(kcm_labels, y_test)
+	rand_score = adjusted_rand_score(kcm_labels, y_train)
 
-	print ("== Shape View ==")
 	print("Rand Score: %.3f" %rand_score)
+	print()
 
 	############ RGB View  ############
-
+	print ("== RGB View ==")
 	kcm = KCM_F_GHClustering(c=7).fit(X_test_rgb_view)
 	kcm_labels = kcm.predict(X_test_rgb_view)
 
-	rand_score = adjusted_rand_score(kcm_labels, y_test)
+	rand_score = adjusted_rand_score(kcm_labels, y_train)
 
-	print ("== RGB View ==")
 	print("Rand Score: %.3f" %rand_score)
+	print()
 
 	############ Full View  ############
-
+	print ("== Full View ==")
 	kcm = KCM_F_GHClustering(c=7).fit(X_test_full_view)
 	kcm_labels = kcm.predict(X_test_full_view)
 
-	rand_score = adjusted_rand_score(kcm_labels, y_test)
+	rand_score = adjusted_rand_score(kcm_labels, y_train)
 
-	print ("== Full View ==")
 	print("Rand Score: %.3f" %rand_score)
 
 def main(args):
