@@ -22,6 +22,10 @@ def evaluate_classifiers(X_train, y_train, X_test, y_test):
 	VIEW1_COLUMNS = [0,1,2,3,4,5,6,7,8]
 	VIEW2_COLUMNS = [9,10,11,12,13,14,15,16,17,18]
 
+	print("+--------------------------------------+")
+	print("|   Machine Learning Project, Part 1   |")
+	print("+--------------------------------------+")
+
 	############ BayesianClassifier  ############
 
 	# Confidence Interval for BayesianClassifier.
@@ -77,6 +81,8 @@ def evaluate_classifiers(X_train, y_train, X_test, y_test):
 				  	{'n_neighbors':1},
 				  	{'n_neighbors':3, 'view1_columns' : VIEW1_COLUMNS, 'view2_columns' : VIEW2_COLUMNS}])
 
+	print("")
+
 def evaluate_clustering(X_train, y_train, X_test, y_test):
 	'''
 		Evaluate the clustering algorithms.
@@ -85,20 +91,25 @@ def evaluate_clustering(X_train, y_train, X_test, y_test):
 	# Initializes the views.
 	# We removed the column 2 because the KCM method is not suitable to features with
 	# all repeated values.
+	
 	SHAPE_VIEW_COLUMNS = [0,1,3,5,6,7,8]
 	RGB_VIEW_COLUMNS = [9,10,11,12,13,14,15,16,17,18]
 	FULL_VIEW_COLUMNS = SHAPE_VIEW_COLUMNS + RGB_VIEW_COLUMNS
 
-	X_test_shape_view = X_train[:, SHAPE_VIEW_COLUMNS]
-	X_test_rgb_view = X_train[:, RGB_VIEW_COLUMNS]
-	X_test_full_view = X_train[:, FULL_VIEW_COLUMNS]
+	X_test_shape_view = X_test[:, SHAPE_VIEW_COLUMNS]
+	X_test_rgb_view = X_test[:, RGB_VIEW_COLUMNS]
+	X_test_full_view = X_test[:, FULL_VIEW_COLUMNS]
+
+	print("+--------------------------------------+")
+	print("|   Machine Learning Project, Part 2   |")
+	print("+--------------------------------------+")
 
 	############ Shape View  ############
 	print ("== Shape View ==")
 	kcm = KCM_F_GHClustering(c=7).fit(X_test_shape_view)
 	kcm_labels = kcm.predict(X_test_shape_view)
 
-	rand_score = adjusted_rand_score(kcm_labels, y_train)
+	rand_score = adjusted_rand_score(kcm_labels, y_test)
 
 	print("Rand Score: %.3f" %rand_score)
 	print()
@@ -108,7 +119,7 @@ def evaluate_clustering(X_train, y_train, X_test, y_test):
 	kcm = KCM_F_GHClustering(c=7).fit(X_test_rgb_view)
 	kcm_labels = kcm.predict(X_test_rgb_view)
 
-	rand_score = adjusted_rand_score(kcm_labels, y_train)
+	rand_score = adjusted_rand_score(kcm_labels, y_test)
 
 	print("Rand Score: %.3f" %rand_score)
 	print()
@@ -118,7 +129,7 @@ def evaluate_clustering(X_train, y_train, X_test, y_test):
 	kcm = KCM_F_GHClustering(c=7).fit(X_test_full_view)
 	kcm_labels = kcm.predict(X_test_full_view)
 
-	rand_score = adjusted_rand_score(kcm_labels, y_train)
+	rand_score = adjusted_rand_score(kcm_labels, y_test)
 
 	print("Rand Score: %.3f" %rand_score)
 
