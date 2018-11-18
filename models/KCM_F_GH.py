@@ -6,8 +6,6 @@ import numpy as np
 
 from sklearn.datasets.samples_generator import make_blobs
 
-np.random.seed(42)
-
 class KCM_F_GHClustering:
 	"""
 	Implements KCM-F-GH algorithm proposed in 'Gaussian kernel c-means hard 
@@ -143,8 +141,9 @@ class KCM_F_GHClustering:
 		pi = np.zeros(p)
 
 		# Calculate the pi term
-		for j in range(p):
-			for cluster in clusters:
+		for cluster in filter(lambda x: x, clusters):
+			kernels = self.kernel_values_(cluster)
+			for j in range(p):
 				# Size of the cluster.
 				P = len(cluster)
 
@@ -152,7 +151,7 @@ class KCM_F_GHClustering:
 				pairs = itertools.product(cluster, cluster)
 
 				# Calculate the pi_j (for j = 1...p)
-				pi[j] += 1/P * np.sum([self.kernel_(self.X_[r], self.X_[s])*(self.X_[r][j] - self.X_[s][j]) ** 2 for (r, s) in pairs if r < s])
+				pi[j] += 1/P * np.sum([kernels[r][s]*(self.X_[r][j] - self.X_[s][j]) ** 2 for (r, s) in pairs])
 
 		# Evaluate the equation 24.
 		self.inv_s2_ = self.inv_sigma_squared * np.power(np.prod(pi), 1/p)/pi
@@ -173,27 +172,30 @@ class KCM_F_GHClustering:
 				   In this case, the elements 1 and 2 belongs to cluster 0, the element 3 belongs to 
 				   cluster 1 and so on.
 		"""
-		
+
 		distances = np.zeros((X.shape[0], self.c_))
 
 		for j, cluster in enumerate(clusters):
 			
 			# Size of the j-th cluster.
-			Pj = len(cluster)
+			cluster_size = len(cluster)
 
 			# Find all combinations of elements of the cluster.
-			pairs = itertools.product(cluster, repeat=2)
+			pairs = list(itertools.product(cluster, repeat=2))
+
+			kernels = self.kernel_values_(cluster)
 
 			# Evaluate the second term of equation 21. Calculate the K(x_r, x_s) for all combination (x_r, x_s) 
 			# of elements of the cluster.
-			sum_kernel_xr_xs = np.sum([self.kernel_(self.X_[r], self.X_[s]) for (r, s) in pairs if r < s])
+			#sum_kernel_xr_xs = np.sum([self.kernel_(self.X_[r], self.X_[s]) for (r, s) in pairs])
+			sum_kernel_xr_xs = np.sum([kernels[r][s] for (r, s) in pairs])
 
 			for i, x_k in enumerate(X):
 				# Evaluate the first term of equation 21. Calculate the K(x_k, x_l) for all elements x_l of the cluster.
 				sum_kernel_xk_xl = np.sum([self.kernel_(self.X_[l], x_k) for l in cluster])
 
 				# Evaluate the full equation (equation 21).
-				distances[i, j] = 1 - 2 * sum_kernel_xk_xl/Pj + sum_kernel_xr_xs/(Pj ** 2)
+				distances[i, j] = 1 - 2 * sum_kernel_xk_xl/cluster_size + sum_kernel_xr_xs/(cluster_size ** 2)
 
 		return distances
 
@@ -225,10 +227,36 @@ class KCM_F_GHClustering:
 
 		"""
 
-		# Ensure that the vectors have the same length.
-		assert(x_l.shape == x_k.shape)
+		# Ensure that both vectors have length equal to the number of features.
+		assert(x_l.shape == x_k.shape and x_l.shape == self.inv_s2_.shape)
 
 		return np.exp((-1/2) * np.sum(np.square(x_l - x_k) * self.inv_s2_))
+
+	def kernel_values_(self, indices):
+		"""
+		Compute the gaussian kernel values between all elements of a cluster
+
+		Parameters
+		---------
+		indices : list of Int.
+				   A list of element indices.
+		"""
+		
+		kernels = dict(map(lambda i: (i, dict()), indices))
+		pairs = itertools.product(indices, repeat=2)
+		
+		# Compute the kernel value between different elements
+		for (r, s) in filter(lambda t: t[0] < t[1], sorted(pairs)):
+			kernel_value = self.kernel_(self.X_[r], self.X_[s])
+			kernels[r][s] = kernel_value
+			kernels[s][r] = kernel_value
+
+		# Compute the kernel value of each element with itself
+		for i in indices:
+			kernels[i][i] = self.kernel_(self.X_[i], self.X_[i])
+
+		return kernels
+
 
 def main(argv):
 	X, y_true = make_blobs(n_samples=300, centers=3, cluster_std=0.60, random_state=0)
@@ -244,4 +272,5 @@ def main(argv):
 	plt.show()
 
 if __name__ == "__main__":
-    main(sys.argv)
+  np.random.seed(42)
+  main(sys.argv)

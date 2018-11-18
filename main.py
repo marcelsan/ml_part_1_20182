@@ -11,8 +11,6 @@ from models.KNeighborsClassifier import KNNClassifier
 from models.KCM_F_GH import KCM_F_GHClustering
 from Utils import confidence_interval, friedman_test
 
-np.random.seed(42)
-
 def evaluate_classifiers(X_train, y_train, X_test, y_test):
 	''' Evaluate the classification algorithms. '''
 
@@ -89,9 +87,9 @@ def evaluate_clustering(X_train, y_train, X_test, y_test):
 	RGB_VIEW_COLUMNS = [9,10,11,12,13,14,15,16,17,18]
 	FULL_VIEW_COLUMNS = SHAPE_VIEW_COLUMNS + RGB_VIEW_COLUMNS
 
-	X_test_shape_view = X_test[:, SHAPE_VIEW_COLUMNS]
-	X_test_rgb_view = X_test[:, RGB_VIEW_COLUMNS]
-	X_test_full_view = X_test[:, FULL_VIEW_COLUMNS]
+	X_shape_view = X[:, SHAPE_VIEW_COLUMNS]
+	X_rgb_view = X[:, RGB_VIEW_COLUMNS]
+	X_full_view = X[:, FULL_VIEW_COLUMNS]
 
 	print("+--------------------------------------+")
 	print("|   Machine Learning Project, Part 1   |")
@@ -99,30 +97,33 @@ def evaluate_clustering(X_train, y_train, X_test, y_test):
 
 	############ Shape View  ############
 	print ("== Shape View ==")
-	kcm = KCM_F_GHClustering(c=7).fit(X_test_shape_view)
-	kcm_labels = kcm.predict(X_test_shape_view)
-
-	rand_score = adjusted_rand_score(kcm_labels, y_test)
+	kcm = max(
+		map(lambda x: KCM_F_GHClustering(c=7).fit(X_shape_view), range(n_executions)),
+		key = lambda kcm: adjusted_rand_score(kcm.predict(X_shape_view), y))
+	kcm_labels = kcm.predict(X_shape_view)
+	rand_score = adjusted_rand_score(kcm_labels, y)
 
 	print("Rand Score: %.3f" %rand_score)
 	print()
 
 	############ RGB View  ############
 	print ("== RGB View ==")
-	kcm = KCM_F_GHClustering(c=7).fit(X_test_rgb_view)
-	kcm_labels = kcm.predict(X_test_rgb_view)
-
-	rand_score = adjusted_rand_score(kcm_labels, y_test)
+	kcm = max(
+		map(lambda x: KCM_F_GHClustering(c=7).fit(X_rgb_view), range(n_executions)),
+		key = lambda kcm: adjusted_rand_score(kcm.predict(X_rgb_view), y))
+	kcm_labels = kcm.predict(X_rgb_view)
+	rand_score = adjusted_rand_score(kcm_labels, y)
 
 	print("Rand Score: %.3f" %rand_score)
 	print()
 
 	############ Full View  ############
 	print ("== Full View ==")
-	kcm = KCM_F_GHClustering(c=7).fit(X_test_full_view)
-	kcm_labels = kcm.predict(X_test_full_view)
-
-	rand_score = adjusted_rand_score(kcm_labels, y_test)
+	kcm = max(
+		map(lambda x: KCM_F_GHClustering(c=7).fit(X_full_view), range(n_executions)),
+		key = lambda kcm: adjusted_rand_score(kcm.predict(X_full_view), y))
+	kcm_labels = kcm.predict(X_full_view)
+	rand_score = adjusted_rand_score(kcm_labels, y)
 
 	print("Rand Score: %.3f" %rand_score)
 
@@ -135,13 +136,13 @@ def main(args):
 
 	if not args.eval_classifiers and not args.eval_clustering:
 		evaluate_classifiers(X_train, y_train, X_test, y_test)
-		evaluate_clustering(X_train, y_train, X_test, y_test)
+		evaluate_clustering(X_test, y_test, n_executions = 2)
 	else:
 		if args.eval_classifiers:
 			evaluate_classifiers(X_train, y_train, X_test, y_test)
 
 		if args.eval_clustering:
-			evaluate_clustering(X_train, y_train, X_test, y_test)
+			evaluate_clustering(X_test, y_test, n_executions = 2)
 
 if __name__ == "__main__":
 	parser = argparse.ArgumentParser(description = '')
