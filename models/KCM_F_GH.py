@@ -6,8 +6,6 @@ import numpy as np
 
 from sklearn.datasets.samples_generator import make_blobs
 
-np.random.seed(42)
-
 class KCM_F_GHClustering:
 	"""
 	Implements KCM-F-GH algorithm proposed in 'Gaussian kernel c-means hard 
@@ -143,7 +141,7 @@ class KCM_F_GHClustering:
 		pi = np.zeros(p)
 
 		# Calculate the pi term
-		for cluster in clusters:
+		for cluster in filter(lambda x: x, clusters):
 			kernels = self.kernel_values_(cluster)
 			for j in range(p):
 				# Size of the cluster.
@@ -274,4 +272,5 @@ def main(argv):
 	plt.show()
 
 if __name__ == "__main__":
-    main(sys.argv)
+  np.random.seed(42)
+  main(sys.argv)

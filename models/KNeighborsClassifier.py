@@ -10,8 +10,6 @@ from sklearn.model_selection import GridSearchCV
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.utils import shuffle
 
-np.random.seed(0)
-
 class KNNClassifier(BaseEstimator, ClassifierMixin):
 	"""
 	K-Nearest Neighbors Classifier
@@ -235,4 +233,5 @@ def main(argv):
 	print("--------------------------------------------")
 
 if __name__ == "__main__":
-    main(sys.argv)
+  np.random.seed(0)
+  main(sys.argv)
