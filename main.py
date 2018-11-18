@@ -9,84 +9,77 @@ from models.CombinedModelsClassifier import CombinedModelsClassifier
 from models.BayesianClassifier import BayesianClassifier
 from models.KNeighborsClassifier import KNNClassifier
 from models.KCM_F_GH import KCM_F_GHClustering
-from Utils import cofidence_interval, friedman_test
+from Utils import confidence_interval, friedman_test
 
 np.random.seed(42)
 
 def evaluate_classifiers(X_train, y_train, X_test, y_test):
-	'''
-		Evaluate the classification algorithms.
-	'''
+	''' Evaluate the classification algorithms. '''
 
 	# Initializes the views.
 	VIEW1_COLUMNS = [0,1,2,3,4,5,6,7,8]
 	VIEW2_COLUMNS = [9,10,11,12,13,14,15,16,17,18]
 
 	print("+--------------------------------------+")
-	print("|   Machine Learning Project, Part 1   |")
+	print("|   Machine Learning Project, Part 2   |")
 	print("+--------------------------------------+")
 
 	############ BayesianClassifier  ############
 
 	# Confidence Interval for BayesianClassifier.
 	bc = BayesianClassifier()
-	min_interval, max_interval = cofidence_interval(bc, X_train, y_train)
+	min_interval, max_interval, mean_accuracy = confidence_interval(bc, X_train, y_train)
 
-	# Pontual estimative.
 	bc.fit(X_train, y_train)
 	y_pred = bc.predict(X_test)	
 
-	print ("== Bayesian Classifier ==")
-	print("Estimativa pontual: %.3f" % accuracy_score(y_test, y_pred))
-	print ("Intervalo de confiança: [%.3f, %.3f]" % (min_interval,  max_interval))
+	print ("=========== Bayesian Classifier ===========")
+	print("Accuracy Evaluation on Test Set : %.3f" % accuracy_score(y_test, y_pred))
+	print("30x 10-fold Accuracy Evaluation: %.3f" % mean_accuracy)
+	print("Confidence Interval: [%.3f, %.3f]" % (min_interval,  max_interval))
 	print ("")
 
 	############ KNeighborsClassifier  ############
 
 	# Confidence interval for KNeighborsClassifier
 	knn_classifier = KNNClassifier(n_neighbors=1)
-	min_interval, max_interval = cofidence_interval(knn_classifier, X_train, y_train, fit_params={'n_neighbors':1})
+	min_interval, max_interval, mean_accuracy = confidence_interval(knn_classifier, X_train, y_train, fit_params={'n_neighbors':1})
 
-	# Pontual estimative.
 	knn_classifier.fit(X_train, y_train)
 	y_pred = knn_classifier.predict(X_test)	
 
-	print ("==  KNeighbors Classifier ==")
-	print("Estimativa pontual: %.3f" % accuracy_score(y_test, y_pred))
-	print ("Intervalo de confiança: [%.3f, %.3f]" % (min_interval,  max_interval))
+	print ("==========  KNeighbors Classifier (k = 1) ==========")
+	print("Accuracy Evaluation on Test Set : %.3f" % accuracy_score(y_test, y_pred))
+	print("30x 10-fold Accuracy Evaluation: %.3f" % mean_accuracy)
+	print("Confidence Interval: [%.3f, %.3f]" % (min_interval,  max_interval))
 	print ("")
 
 	############ CombinedModelsClassifier  ############
 
 	# Confidence interval for CombinedModelsClassifier
 	combined_classfier = CombinedModelsClassifier(n_neighbors=3, view1_columns=VIEW1_COLUMNS, view2_columns=VIEW2_COLUMNS)
-	min_interval, max_interval = cofidence_interval(combined_classfier, X_train, y_train,
+	min_interval, max_interval, mean_accuracy = confidence_interval(combined_classfier, X_train, y_train,
 													fit_params = {'n_neighbors':3, 'view1_columns' : VIEW1_COLUMNS, 'view2_columns' : VIEW2_COLUMNS})	
 
-	# Pontual estimative.
 	combined_classfier.fit(X_train, y_train)
 	y_pred = combined_classfier.predict(X_test)
 
-	print ("==  Combined Classifier ==")
-	print("Estimativa pontual: %.3f" % accuracy_score(y_test, y_pred))
-	print ("Intervalo de confiança: [%.3f, %.3f]" % (min_interval,  max_interval))
+	print ("===========  Combined Classifier (k = 3) ===========")
+	print("Accuracy Evaluation on Test Set : %.3f" % accuracy_score(y_test, y_pred))
+	print("30x 10-fold Accuracy Evaluation: %.3f" % mean_accuracy)
+	print("Confidence Interval: [%.3f, %.3f]" % (min_interval,  max_interval))
 	print("")
 
-	############ Friedman Test  ############
-
-	print ("==  Friedman Test ==")
+	############ Friedman Test  #################
+	print ("==============  Friedman Test ==============")
 	friedman_test([bc, knn_classifier, combined_classfier],
-				  X_train, y_train,
-				  fit_params=[None,
-				  	{'n_neighbors':1},
-				  	{'n_neighbors':3, 'view1_columns' : VIEW1_COLUMNS, 'view2_columns' : VIEW2_COLUMNS}])
+				  X_train, y_train, fit_params=[None, {'n_neighbors':1},
+				  					{'n_neighbors':3, 'view1_columns' : VIEW1_COLUMNS, 'view2_columns' : VIEW2_COLUMNS}])
 
 	print("")
 
 def evaluate_clustering(X_train, y_train, X_test, y_test):
-	'''
-		Evaluate the clustering algorithms.
-	'''
+	''' Evaluate the clustering algorithms. '''
 
 	# Initializes the views.
 	# We removed the column 2 because the KCM method is not suitable to features with
@@ -101,7 +94,7 @@ def evaluate_clustering(X_train, y_train, X_test, y_test):
 	X_test_full_view = X_test[:, FULL_VIEW_COLUMNS]
 
 	print("+--------------------------------------+")
-	print("|   Machine Learning Project, Part 2   |")
+	print("|   Machine Learning Project, Part 1   |")
 	print("+--------------------------------------+")
 
 	############ Shape View  ############

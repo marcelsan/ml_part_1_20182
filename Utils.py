@@ -6,7 +6,7 @@ from sklearn.model_selection import cross_val_score
 from sklearn.model_selection import StratifiedKFold
 from sklearn.utils import shuffle
 
-def cofidence_interval(clf, X, y, n_times=30, k=10, fit_params=None):
+def confidence_interval(clf, X, y, n_times=30, k=10, fit_params=None):
 	"""
 	Obtain the accuracy confidence interval of a given classifier.
 	
@@ -48,7 +48,7 @@ def cofidence_interval(clf, X, y, n_times=30, k=10, fit_params=None):
 	f = np.mean(ntimes_folds)
 	interval = 1.96 * math.sqrt( (f * (1 - f)) / n_times)  # 95% confidance level.
 
-	return (np.max((0.0, f - interval)), np.min((f + interval, 1.0)))
+	return np.max((0.0, f - interval)), np.min((f + interval, 1.0)), f
 
 def friedman_test(clfs, X, y, fit_params=None):
 	N = 30 
@@ -79,7 +79,7 @@ def friedman_test(clfs, X, y, fit_params=None):
 		for i in range(k):
 			for j in range(i+1, k):
 				if np.abs(ranks[i] - ranks[j]) >= CD:
-					print("The classifier %s is different to %s." %(clfs[i].name_, clfs[j].name_))
+					print(">The classifier %s is different to %s." %(clfs[i].name_, clfs[j].name_))
 
 	else:
 		print("Do not reject H0.")
