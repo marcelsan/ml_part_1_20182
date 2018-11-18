@@ -5,8 +5,6 @@ import numpy as np
 import pandas as pd
 from sklearn.datasets.samples_generator import make_blobs
 
-np.random.seed(0)
-
 class KMeansClustering:
 	def __init__(self, c, tol=0.001, max_iter=300):
 		self.c_ = c
@@ -70,4 +68,5 @@ def main(argv):
 	print(kmeans.labels_)
 
 if __name__ == "__main__":
-    main(sys.argv)
+  np.random.seed(0)
+  main(sys.argv)
