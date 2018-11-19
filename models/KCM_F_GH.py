@@ -137,9 +137,10 @@ class KCM_F_GHClustering:
 		# Number of features of the training data.
 		p = self.X_.shape[1]
 
-		# Initialize the pi term.
-		pi = np.zeros(p)
+		# Initialize the pi term with a small epsilon.
+		pi = np.zeros(p) + 1e-4  # Small value to avoid numerical issues
 
+		np.set_printoptions(precision = 4, linewidth = 200)
 		# Calculate the pi term
 		for cluster in filter(lambda x: x, clusters):
 			kernels = self.kernel_values_(cluster)
@@ -151,7 +152,8 @@ class KCM_F_GHClustering:
 				pairs = itertools.product(cluster, cluster)
 
 				# Calculate the pi_j (for j = 1...p)
-				pi[j] += 1/P * np.sum([kernels[r][s]*(self.X_[r][j] - self.X_[s][j]) ** 2 for (r, s) in pairs])
+				result = np.sum([kernels[r][s]*(self.X_[r][j] - self.X_[s][j]) ** 2 for (r, s) in pairs])
+				pi[j] += (1/P) * result
 
 		# Evaluate the equation 24.
 		self.inv_s2_ = self.inv_sigma_squared * np.power(np.prod(pi), 1/p)/pi
@@ -175,8 +177,8 @@ class KCM_F_GHClustering:
 
 		distances = np.zeros((X.shape[0], self.c_))
 
-		for j, cluster in enumerate(clusters):
-			
+		# Process non-empty clusters
+		for j, cluster in filter(lambda t: t[1], enumerate(clusters)):
 			# Size of the j-th cluster.
 			cluster_size = len(cluster)
 
@@ -187,7 +189,6 @@ class KCM_F_GHClustering:
 
 			# Evaluate the second term of equation 21. Calculate the K(x_r, x_s) for all combination (x_r, x_s) 
 			# of elements of the cluster.
-			#sum_kernel_xr_xs = np.sum([self.kernel_(self.X_[r], self.X_[s]) for (r, s) in pairs])
 			sum_kernel_xr_xs = np.sum([kernels[r][s] for (r, s) in pairs])
 
 			for i, x_k in enumerate(X):
@@ -196,6 +197,16 @@ class KCM_F_GHClustering:
 
 				# Evaluate the full equation (equation 21).
 				distances[i, j] = 1 - 2 * sum_kernel_xk_xl/cluster_size + sum_kernel_xr_xs/(cluster_size ** 2)
+
+		# Process empty clusters
+		empty_clusters = [(j, cluster) for j, cluster in enumerate(clusters) if not cluster]
+		new_centroids_indices = np.random.choice(
+			np.arange(0, X.shape[0]),
+			len(empty_clusters),
+			replace=False)
+		for ((j, cluster), centroid_index) in zip(empty_clusters, new_centroids_indices):
+			distances[:, j] = np.inf
+			distances[centroid_index, j] = 0
 
 		return distances
 
