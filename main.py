@@ -100,34 +100,51 @@ def evaluate_clustering(X_train, y_train, X_test, y_test):
 	kcm = max(
 		map(lambda x: KCM_F_GHClustering(c=7).fit(X_shape_view), range(n_executions)),
 		key = lambda kcm: adjusted_rand_score(kcm.predict(X_shape_view), y))
-	kcm_labels = kcm.predict(X_shape_view)
-	rand_score = adjusted_rand_score(kcm_labels, y)
-
-	print("Rand Score: %.3f" %rand_score)
-	print()
+	report(kcm, X_shape_view, y)
 
 	############ RGB View  ############
 	print ("== RGB View ==")
 	kcm = max(
 		map(lambda x: KCM_F_GHClustering(c=7).fit(X_rgb_view), range(n_executions)),
 		key = lambda kcm: adjusted_rand_score(kcm.predict(X_rgb_view), y))
-	kcm_labels = kcm.predict(X_rgb_view)
-	rand_score = adjusted_rand_score(kcm_labels, y)
-
-	print("Rand Score: %.3f" %rand_score)
-	print()
+	report(kcm, X_rgb_view, y)
 
 	############ Full View  ############
 	print ("== Full View ==")
 	kcm = max(
 		map(lambda x: KCM_F_GHClustering(c=7).fit(X_full_view), range(n_executions)),
 		key = lambda kcm: adjusted_rand_score(kcm.predict(X_full_view), y))
-	kcm_labels = kcm.predict(X_full_view)
-	rand_score = adjusted_rand_score(kcm_labels, y)
+	report(kcm, X_full_view, y)
 
-	print("Rand Score: %.3f" %rand_score)
+
+def report(kcm, X, y):
+	np.set_printoptions(precision = 4, linewidth = 200)
+
+	print("Number of elements per cluster:")
+	for i, cluster in enumerate(kcm.clusters):
+		print("cluster " + str(i) + " has " + str(len(cluster)) + " elements")
+	
+	print("Hyperparameter vector (1 / s^2):")
+	print(kcm.inv_s2_)
+
+	print("Element indices per cluster:")
+	for i, cluster in enumerate(kcm.clusters):
+		print("cluster " + str(i) + ":")
+		print(cluster)
+
+	print("Elements per cluster:")
+	for i, cluster in enumerate(kcm.clusters):
+		print("cluster " + str(i) + ":")
+		print(X[cluster])
+
+	kcm_labels = kcm.predict(X)
+	score = adjusted_rand_score(kcm_labels, y)
+	print("Rand Score: %.3f" %score)
+	
+	np.set_printoptions()
 
 def main(args):
+	np.random.seed(100)
 	# Load and prepare the dataset.
 	loader = DataLoader()
 	loader.load(train_dir='database/segmentation.data.txt',  test_dir='database/segmentation.test.txt')
@@ -136,18 +153,18 @@ def main(args):
 
 	if not args.eval_classifiers and not args.eval_clustering:
 		evaluate_classifiers(X_train, y_train, X_test, y_test)
-		evaluate_clustering(X_test, y_test, n_executions = 2)
+		evaluate_clustering(X_train, y_train, n_executions = 50)
 	else:
 		if args.eval_classifiers:
 			evaluate_classifiers(X_train, y_train, X_test, y_test)
 
 		if args.eval_clustering:
-			evaluate_clustering(X_test, y_test, n_executions = 2)
+			evaluate_clustering(X_train, y_train, n_executions = 50)
 
 if __name__ == "__main__":
 	parser = argparse.ArgumentParser(description = '')
-	parser.add_argument('--eval_classifiers', help='Evaluate the classification algorithms.', action='store_true', default=False)
-	parser.add_argument('--eval_clustering', help='Evaluate the clustering algorithms.', action='store_true', default=False)
+	parser.add_argument('--eval-classifiers', help='Evaluate the classification algorithms.', action='store_true', default=False)
+	parser.add_argument('--eval-clustering', help='Evaluate the clustering algorithms.', action='store_true', default=False)
 	args = parser.parse_args()
 
 	main(args)
