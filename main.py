@@ -76,7 +76,7 @@ def evaluate_classifiers(X_train, y_train, X_test, y_test):
 
 	print("")
 
-def evaluate_clustering(X_train, y_train, X_test, y_test):
+def evaluate_clustering(X, y, n_executions = 100):
 	''' Evaluate the clustering algorithms. '''
 
 	# Initializes the views.
@@ -153,13 +153,13 @@ def main(args):
 
 	if not args.eval_classifiers and not args.eval_clustering:
 		evaluate_classifiers(X_train, y_train, X_test, y_test)
-		evaluate_clustering(X_train, y_train, n_executions = 50)
+		evaluate_clustering(X_test, y_test)
 	else:
 		if args.eval_classifiers:
 			evaluate_classifiers(X_train, y_train, X_test, y_test)
 
 		if args.eval_clustering:
-			evaluate_clustering(X_train, y_train, n_executions = 50)
+			evaluate_clustering(X_test, y_test)
 
 if __name__ == "__main__":
 	parser = argparse.ArgumentParser(description = '')
