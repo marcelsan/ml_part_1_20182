@@ -3,6 +3,7 @@ import sys
 
 import numpy as np
 
+from sklearn.cluster import KMeans
 from sklearn.metrics import accuracy_score, adjusted_rand_score
 from DataLoader import DataLoader
 from models.CombinedModelsClassifier import CombinedModelsClassifier
@@ -76,6 +77,56 @@ def evaluate_classifiers(X_train, y_train, X_test, y_test):
 
 	print("")
 
+	################################ DATASET VIEWS #######################################
+
+	# We evaluate the classifers on Shape Veiw and RGB View separately.
+
+	X_train_shape_view = X_train[:, VIEW1_COLUMNS]
+	X_train_rgb_view = X_train[:, VIEW2_COLUMNS]
+
+	X_test_shape_view = X_test[:, VIEW1_COLUMNS]
+	X_test_rgb_view = X_test[:, VIEW2_COLUMNS]
+
+
+	print("======== Shape View ========")
+	
+	############ BayesianClassifier  ############
+	bc = BayesianClassifier()
+	y_pred = bc.fit(X_train_shape_view, y_train).predict(X_test_shape_view)	
+	
+	print ("=========== Bayesian Classifier ===========")
+	print("Accuracy Evaluation on Test Set : %.3f" % accuracy_score(y_test, y_pred))
+	print ("")
+
+	############ KNeighborsClassifier  ############
+	knn_classifier = KNNClassifier(n_neighbors=1)
+	y_pred = knn_classifier.fit(X_train_shape_view, y_train).predict(X_test_shape_view)
+
+	print ("==========  KNeighbors Classifier (k = 1) ==========")
+	print("Accuracy Evaluation on Test Set : %.3f" % accuracy_score(y_test, y_pred))
+	print ("")
+
+
+
+
+	print("========= RGB View =========")
+
+	############ BayesianClassifier  ############
+	bc = BayesianClassifier()
+	y_pred = bc.fit(X_train_rgb_view, y_train).predict(X_test_rgb_view)	
+
+	print ("=========== Bayesian Classifier ===========")
+	print("Accuracy Evaluation on Test Set : %.3f" % accuracy_score(y_test, y_pred))
+	print ("")
+
+	############ KNeighborsClassifier  ############
+	knn_classifier = KNNClassifier(n_neighbors=1)
+	y_pred = knn_classifier.fit(X_train_rgb_view, y_train).predict(X_test_rgb_view)	
+
+	print ("==========  KNeighbors Classifier (k = 1) ==========")
+	print("Accuracy Evaluation on Test Set : %.3f" % accuracy_score(y_test, y_pred))
+	print ("")
+
 def evaluate_clustering(X, y, n_executions = 100):
 	''' Evaluate the clustering algorithms. '''
 
@@ -144,7 +195,7 @@ def report(kcm, X, y):
 	np.set_printoptions()
 
 def main(args):
-	np.random.seed(100)
+	#np.random.seed(100)
 	# Load and prepare the dataset.
 	loader = DataLoader()
 	loader.load(train_dir='database/segmentation.data.txt',  test_dir='database/segmentation.test.txt')

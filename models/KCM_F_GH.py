@@ -21,7 +21,7 @@ class KCM_F_GHClustering:
 	Available at: https://www.sciencedirect.com/science/article/pii/S0031320318300712
 	"""
 
-	def __init__(self, c, verbose=True):
+	def __init__(self, c, max_iterations=50, verbose=True):
 		"""
 		Parameters
 		---------
@@ -34,7 +34,8 @@ class KCM_F_GHClustering:
 		"""
 
 		self.c_ = c  # number of clusters.
-		self.verbose_ = verbose 
+		self.verbose_ = verbose
+		self.max_iterations_ = max_iterations
 
 	def fit(self, X, y=None):
 		"""
@@ -70,7 +71,7 @@ class KCM_F_GHClustering:
 		if self.verbose_:
 			print("Running iteration: ", end='', flush=True)
 		
-		while True:
+		while iterations <= self.max_iterations_:
 			iterations += 1
 
 			if self.verbose_:
